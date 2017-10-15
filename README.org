@@ -1,6 +1,8 @@
 * Lucifer
 Sogou 数据分析(个人)
 
+http://www.sogou.com/labs/resource/q.php
+http://blog.javachen.com/2014/06/09/hive-data-manipulation-language.html
 
 ** 作业要求
 利用 hadoop 平台，将 sogou 数据进行分析，数据大小为 2.14G，记录数为 4500 万条，
@@ -27,7 +29,7 @@ Sogou 数据分析(个人)
     # 查看数据库
     show databases;
     # 创建数据库
-    create databases sogou;
+    create database sogou;
     # 使用数据库
     use sogou;
     # 查看所有表名
@@ -61,8 +63,8 @@ Sogou 数据分析(个人)
 
     查询结果
     #+BEGIN_SRC sql
-    elect * from sogou_ext_20111230 limit 10;
-    select url from sogpu_ext_20111230 limit 10;
+    select * from sogou_ext_20111230 limit 10;
+    select url from sogou_ext_20111230 limit 10;
     select * from sogou_ext_20111230 where uid='96994a0480e7e1edcaef67b20d8816b7';
     #+END_SRC
 
