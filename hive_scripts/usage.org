@@ -1,0 +1,1 @@
+hive -f create.sql
