@@ -17,9 +17,54 @@ Sogou 数据分析(个人)
 
 ** 操作步骤
 
-*** 查看数据
+** 一、数据预处理
+    看 PDF 文档
 
+** 二、基于 Hive 构建日志数据的数据仓库
 
+    输入 hive 命令，进入 hive 交互界面
+    #+BEGIN_SRC sql
+    # 查看数据库
+    show databases;
+    # 创建数据库
+    create databases sogou;
+    # 使用数据库
+    use sogou;
+    # 查看所有表名
+    show tables;
+    # 创建外部表
+    create external table sogou.sogou_20111230(ts string,uid string,keyword string,rank int,sorder int,url string)Row FORMAT DELIMITED FIELDS TERMINATED BY '\t' stored as TEXTFILE location '/sogou/20111230'; # 创建数据库要小心关键字冲突，不能使用 date，order,user 等关键字。
+    # 查看新创建的表结构
+    show create table sogou.sogou_20111230;
+    describe sogou.sogou_20111230;
+    # 删除表
+    drop table sogou.sogou_20111230;
+    #+END_SRC
+
+    按照年，月，日，小时分区
+    创建扩展 4 个字段(年，月，日，小时)数据的外部表
+    #+BEGIN_SRC sql
+    create external table sogou.sogou_ext_20111230(ts string,uid string,keyword string,rank int,sorder int,url string,year int,month int,day int,hour int)row format delimited fields terminated by '\t' stored as textfile location '/sogou_ext/20111230';
+    #+END_SRC
+
+    创建带分区的表：
+    #+BEGIN_SRC sql
+    create external table sogou.sogou_partition(ts string,uid string,keyword string,rank int,sorder int,url string)partitioned by (year int,month int,day int,hour int) row format delimited fields terminated by '\t' stored as textfile;
+    #+END_SRC
+
+    灌入数据：
+    #+BEGIN_SRC sql
+    # 设置动态分区。nonstrict 全分区字段是动态的
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    insert overwrite table sogou.sogou_partition partition(year,month,day,hour) select * from sogou.sogou_ext_20111230;
+    #+END_SRC
+
+    查询结果
+    #+BEGIN_SRC sql
+    elect * from sogou_ext_20111230 limit 10;
+    select url from sogpu_ext_20111230 limit 10;
+    select * from sogou_ext_20111230 where uid='96994a0480e7e1edcaef67b20d8816b7';
+    #+END_SRC
 
 
 ** 四、条数统计
@@ -163,7 +208,7 @@ Sogou 数据分析(个人)
     sqoop export --connect jdbc:mysql://localhost:3306/test --username root --password cloudera --table uid_cnt --export-dir '/user/hive/warehouse/sogou.db/uid_cnt' --fields-terminated-by '\t'
     #+END_SRC
 
-** HBase Shell 操作实验
+** 十、HBase Shell 操作实验
     #+BEGIN_SRC shell
     hbase shell
     list
@@ -203,7 +248,7 @@ Sogou 数据分析(个人)
     hadoop jar hbase-example.jar HBaseImportTest /home/zkpk/uid_cnt/uid_cnt.output
     #+END_SRC
 
-** Mahout 聚类实验
+** 十三、Mahout 聚类实验
     #+BEGIN_SRC shell
     wget http://archive.ics.uci.edu/ml/databases/synthetic_control/synthetic_control.data
     hdfs dfs -mkdir testdata
