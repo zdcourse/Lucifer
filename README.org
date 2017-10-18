@@ -95,3 +95,120 @@ Sogou 数据分析(个人)
     (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid having cnt > 2) a
     join sogou.sogou_ext_20111230 b on a.uid=b.uid limit 50;
     #+END_SRC
+
+** 七、用户行为分析
+    点击次数与 Rank 之间的关系
+    #+BEGIN_SRC sql
+    select count(*) from sogou.sogou_ext_20111230 where rank < 11;
+    select count(*) from sogou.sogou_ext_20111230;
+    #+END_SRC
+
+    直接输入 URL 作为查询词的比例
+    #+BEGIN_SRC sql
+    -- A
+    select count(*) from sogou.sogou_ext_20111230 where keyword like '%www%';
+
+    -- B
+    select count(*) from sogou.sogou_ext_20111230;
+
+    -- A/B
+    #+END_SRC
+
+    直接输入 URL 的查询中，点击数点击的结果就是用户输入的 URL 的网址 所占的比例 C
+    #+BEGIN_SRC sql
+    -- C
+    select sum(if(instr(url, keyword)>0,1,0)) from (select * from sogou.sogou_ext_20111230 where keyword like '%www%') a;
+
+    -- C / A
+    #+END_SRC
+
+    独立用户行为分析
+    #+BEGIN_SRC sql
+    select uid,count(*) as cnt from sogou.sogou_ext_20111230  where keyword='仙剑奇侠传' group by uid having cnt > 3;
+    #+END_SRC
+
+    查找 uid 是 653d48aa356d5111ac0e59f9fe736429 和 e11c6273e337c1d1032229f1b2321a75 的相关搜索记录
+    #+BEGIN_SRC sql
+    select * from sogou.sogou_ext_20111230 where uid='653d48aa356d5111ac0e59f9fe736429' and keyword like '%仙剑奇侠传%';
+    select * from sogou.sogou_ext_20111230 where uid='e11c6273e337c1d1032229f1b2321a75' and keyword like '%仙剑奇侠传%';
+    #+END_SRC
+
+** 八、实现数据分析需求五：实时数据
+    每个 UID 在当天的查询点击次数
+
+    创建临时表
+    #+BEGIN_SRC sql
+    create table sogou.uid_cnt(uid STRING, cnt INT) COMMENT 'This is the sogou search data of one day'
+    ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' STORED AS TEXTFILE;
+    #+END_SRC
+
+    查询并插入
+    #+BEGIN_SRC sql
+    INSERT OVERWRITE TABLE sogou.uid_cnt select uid,count(*) as cnt from sogou.sogou_ext_20111230 group by uid;
+    #+END_SRC
+
+** 九、使用 Sqoop 将数据导入 Mysql
+    #+BEGIN_SRC sql
+    show databases;
+    create database test;
+
+    create table uid_cnt (
+        uid varchar(255) default null,
+        cnt int(11) default null
+    ) engine=InnoDB default CHARSET=utf8;
+    #+END_SRC
+
+    导入数据
+    #+BEGIN_SRC shell
+    sqoop export --connect jdbc:mysql://localhost:3306/test --username root --password cloudera --table uid_cnt --export-dir '/user/hive/warehouse/sogou.db/uid_cnt' --fields-terminated-by '\t'
+    #+END_SRC
+
+** HBase Shell 操作实验
+    #+BEGIN_SRC shell
+    hbase shell
+    list
+    create 'test', {NAME => 'f1', VERSIONS => 5}
+    list
+    put 'test', 'aid001', 'f1:uid', '001'
+    scan 'test'
+    get 'test', 'aid001'
+    describe 'test'
+    disable 'test'
+    alter 'test', NAME => 'f1', VERSIONS => 3
+    enable 'test'
+
+    describe 'test'
+    truncate 'test'
+    scan 'test'
+    disable 'test'
+    drop 'test'
+    list
+    create 'uid_cnt', {NAME => 'f1', VERSIONS => 5}
+
+    #+END_SRC
+
+
+** 十一、使用 Sqoop 将数据导入到 HBase
+
+    #+BEGIN_SRC shell
+    sqoop import --connect jdbc:mysql://localhost:3306/test --username root --password cloudera --table uid_cnt --hbase-table uid_cnt --column-family f1 --hbase-row-key uid --hbase-create-table -m 1
+    #+END_SRC
+
+
+** 十二、HBase Java API 访问统计数据
+    #+BEGIN_SRC shell
+    # 将之前的 uid_cnt 数据从 HDFS 复制到本地
+    hdfs dfs -get /user/hive/warehouse/sogou.db/uid_cnt .
+    cat ~/uid_cnt/00000* > uid_cnt.output
+    hadoop jar hbase-example.jar HBaseImportTest /home/zkpk/uid_cnt/uid_cnt.output
+    #+END_SRC
+
+** Mahout 聚类实验
+    #+BEGIN_SRC shell
+    wget http://archive.ics.uci.edu/ml/databases/synthetic_control/synthetic_control.data
+    hdfs dfs -mkdir testdata
+    hdfs dfs -put synthetic_control.data testdata/
+    hdfs dfs -ls testdata
+    hadoop jar mahout-examples-0.9-job.jar org.apache.mahout.clustering.syntheticcontrol.kmeans.Job
+    hdfs dfs -ls output
+    #+END_SRC
