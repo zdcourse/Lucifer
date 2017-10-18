@@ -61,7 +61,7 @@ http://www.sogou.com/labs/resource/q.php
 
     查询结果
     #+BEGIN_SRC sql
-    elect * from sogou_ext_20111230 limit 10;
+    select * from sogou_ext_20111230 limit 10;
     select url from sogpu_ext_20111230 limit 10;
     select * from sogou_ext_20111230 where uid='96994a0480e7e1edcaef67b20d8816b7';
     #+END_SRC
