@@ -1,0 +1,9 @@
+hive -f select01.hql
+hive -f select02.hql
+hive -f select03.hql
+hive -f select04.hql
+hive -f select05.hql
+hive -f select06.hql
+hive -f select07.hql
+hive -f select08.hql
+hive -f select09.hql
