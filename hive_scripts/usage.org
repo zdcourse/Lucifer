@@ -36,3 +36,38 @@ hive -f <hive script file>
     select sum(if(uids.cnt=1, 1, 0)),sum(if(uids.cnt=2,1,0)), sum(if(uids.cnt=3,1,0)), sum(if(uids.cnt>3,1,0))
     from
     (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid) uids;
+
+* select10 UID 平均查询次数
+    select sum(a.cnt)/count(a.uid) from (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid) a;
+
+
+* select11 查询次数大于 2 次的用户总数
+    select count(a.uid) from (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid having cnt > 2) a;
+
+* select12 查询次数大于 2 次的用户占比
+    select count(distinct (uid)) from sogou.sogou_ext_20111230;
+    结果为 A
+
+    select11 的结果为 B
+
+    占比为 B/A
+
+* select13 查询次数大于 2 次的数据展示
+    select b.* from
+    (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid having cnt > 2) a
+    join sogou.sogou_ext_20111230 b on a.uid=b.uid limit 50;
+
+    这个执行有问题
+
+* select14 点击次数与 Rank 之间的关系
+    select count(*) from sogou.sogou_ext_20111230 where rank < 11;
+
+
+* select15 直接输入 URL 作为查询词的比例
+    select count(*) from sogou.sogou_ext_20111230 where keyword like '%www%';
+
+* select16 直接输入 URL 的查询中，点击数点击的结果就是用户输入的 URL 的网址 所占的比例 C
+    select sum(if(instr(url, keyword)>0,1,0)) from (select * from sogou.sogou_ext_20111230 where keyword like '%www%') a;
+
+* select17 独立用户行为分析
+    select uid,count(*) as cnt from sogou.sogou_ext_20111230  where keyword='仙剑奇侠传' group by uid having cnt > 3;
