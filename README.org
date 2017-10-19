@@ -22,6 +22,21 @@ http://blog.javachen.com/2014/06/09/hive-data-manipulation-language.html
 ** 一、数据预处理
     看 PDF 文档
 
+
+    #+BEGIN_SRC shell
+    sudo -u hdfs hadoop fs -mkdir -p /sogou_ext/20111230
+    sudo -u hdfs hadoop fs -mkdir -p /sogou/20111230
+
+    cp /root/sogou.500w.utf8 /tmp
+    chown hdfs:hdfs /tmp/sogou.500w.utf8
+    sudo -u hdfs hadoop fs -put /tmp/sogou.500w.utf8 /sogou/20111230/
+
+    cp /root/sogou.500w.utf8.flt /tmp
+    chown hdfs:hdfs /tmp/sogou.500w.utf8.flt
+    sudo -u hdfs hadoop fs -put /tmp/sogou.500w.utf8.flt /sogou_ext/20111230/
+
+
+    #+END_SRC
 ** 二、基于 Hive 构建日志数据的数据仓库
 
     输入 hive 命令，进入 hive 交互界面
