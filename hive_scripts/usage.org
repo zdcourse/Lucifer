@@ -33,6 +33,6 @@ hive -f <hive script file>
 
 
 * select09 UID 查询次数分布
-    select sum(if(uids.cnt=1, 1, 0)),sum(if(uids.cnt=2,1,0)), sum(if(uids, cnt=3,1,0)), sum(if(uids.cnt>3,1,0))
+    select sum(if(uids.cnt=1, 1, 0)),sum(if(uids.cnt=2,1,0)), sum(if(uids.cnt=3,1,0)), sum(if(uids.cnt>3,1,0))
     from
     (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid) uids;

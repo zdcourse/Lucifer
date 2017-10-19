@@ -125,7 +125,7 @@ http://blog.javachen.com/2014/06/09/hive-data-manipulation-language.html
 ** 六、UID 分析
     UID 查询次数分布
     #+BEGIN_SRC sql
-    select sum(if(uids.cnt=1, 1, 0)),sum(if(uids.cnt=2,1,0)), sum(if(uids, cnt=3,1,0)), sum(if(uids.cnt>3,1,0))
+    select sum(if(uids.cnt=1, 1, 0)),sum(if(uids.cnt=2,1,0)), sum(if(uids.cnt=3,1,0)), sum(if(uids.cnt>3,1,0))
     from
     (select uid, count(*) as cnt from sogou.sogou_ext_20111230 group by uid) uids;
     #+END_SRC
